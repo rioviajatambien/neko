@@ -25,31 +25,33 @@
 </div>
 
 <script>
-    async function fetchCatData() {
-        const factText = document.getElementById('cat-fact');
-        const catImg = document.getElementById('cat-img');
+async function fetchCatData() {
+    const factText = document.getElementById('cat-fact');
+    const catImg = document.getElementById('cat-img');
+    
+    factText.innerText = "新しい猫を探しています...";
+    
+    try {
+        const [factRes, imgRes] = await Promise.all([
+            fetch('https://catfact.ninja/fact'),
+            fetch('https://api.thecatapi.com/v1/images/search')
+        ]);
         
-        factText.innerText = "Finding a new cat...";
-        
-        try {
-            // 2つのAPIを同時に叩く（猫の知識 ＋ 猫の画像）
-            const [factRes, imgRes] = await Promise.all([
-                fetch('https://catfact.ninja/fact'),
-                fetch('https://api.thecatapi.com/v1/images/search')
-            ]);
-            
-            const factData = await factRes.json();
-            const imgData = await imgRes.json();
-            
-            factText.innerText = factData.fact;
-            catImg.src = imgData[0].url;
-        } catch (error) {
-            factText.innerText = "猫が逃げちゃいました（エラー発生）";
-        }
-    }
+        const factData = await factRes.json();
+        const imgData = await imgRes.json();
 
-    // 初回読み込み
-    fetchCatData();
+        // 英語の豆知識を翻訳API（MyMemoryなどの無料枠）に投げる
+        const translateRes = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(factData.fact)}&langpair=en|ja`);
+        const translateData = await translateRes.json();
+        
+        // 翻訳結果を表示
+        factText.innerText = translateData.responseData.translatedText;
+        catImg.src = imgData[0].url;
+        
+    } catch (error) {
+        factText.innerText = "猫が逃げちゃいました（エラー発生）";
+    }
+}
 </script>
 
 </body>
